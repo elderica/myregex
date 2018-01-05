@@ -92,6 +92,6 @@ defmodule Myregex do
   def matchQuestion(pattern, text) do
     first_matched = matchOne(String.first(pattern), String.first(text))
     matched_after_question = match(String.slice(pattern, 2..-1), String.slice(text, 1..-1))
-      (first_matched && matched_after_question) || match(String.slice(pattern, 2..-1), text)
+    (first_matched && matched_after_question) || match(String.slice(pattern, 2..-1), text)
   end
 end
