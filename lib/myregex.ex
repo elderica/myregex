@@ -3,60 +3,14 @@ defmodule Myregex do
   A simple regex module for practice.
   """
 
-  def matchOne(nil, __) do
-    true
-  end
-
-  def matchOne("", __) do
-    true
-  end
-
-  def matchOne(__, nil) do
-    false
-  end
-
-  def matchOne(__, "") do
-    false
-  end
-
-  def matchOne(".", __) do
-    true
-  end
-
   def matchOne(pattern, text) do
-    pattern == text
-  end
-
-  def match("", __) do
-    true
-  end
-
-  def match(nil, __) do
-    true
-  end
-
-  def match("$", "") do
-    true
-  end
-
-  def match("$", nil) do
-    true
-  end
-
-  def match(pattern, text) do
-    # workaround for testing
-    {phead, prest} = case String.next_grapheme pattern do
-      nil -> {"", ""}
-      t -> t
-    end
-    {thead, trest} = case String.next_grapheme text do
-      nil -> {"", ""}
-      t -> t
-    end
-    if String.first(prest) == "?" do
-      matchQuestion(pattern, text)
-    else
-      matchOne(phead, thead) && match(prest, trest)
+    case {pattern, text} do
+      {"", _} -> true
+      {nil, _} -> true
+      {_, ""} -> false
+      {_, nil} -> false
+      {_, _} ->
+        pattern == "." || text == pattern
     end
   end
 
@@ -65,20 +19,54 @@ defmodule Myregex do
       String.first(pattern) == "^" ->
         match(String.slice(pattern, 1..-1), text)
       true ->
-        l = String.length text
-        Enum.any?(
-          0..(l-1),
-          fn(i) ->
-            r = String.slice(text, i..-1)
-            match(pattern, r)
-          end
-        )
+        match(".*" <> pattern, text)
+    end
+  end
+
+  def match(pattern, text) do
+    cond do
+      pattern == "" -> true
+      pattern == nil -> true
+      pattern == "$" && text == "" -> true
+      pattern == "$" && text == "" -> true
+      String.at(pattern, 1) == "?" ->
+        matchQuestion(pattern, text)
+      String.at(pattern, 1) == "*" ->
+        matchStar(pattern, text)
+      String.first(pattern) == "(" ->
+        matchGroup(pattern, text)
+      true ->
+        {pcar, pcdr} = String.next_grapheme(pattern)
+        {tcar, tcdr} = case String.next_grapheme(text) do
+          nil -> {"", ""}
+          x -> x
+        end
+        matchOne(pcar, tcar) && match(pcdr, tcdr)
     end
   end
 
   def matchQuestion(pattern, text) do
-    first_matched = matchOne(String.first(pattern), String.first(text))
-    matched_after_question = match(String.slice(pattern, 2..-1), String.slice(text, 1..-1))
-    (first_matched && matched_after_question) || match(String.slice(pattern, 2..-1), text)
+    pcar = String.first(pattern)
+    pcddr = String.slice(pattern, 2..-1)
+    {tcar, tcdr} = case String.next_grapheme(text) do
+      nil -> {"", ""}
+      x -> x
+    end
+    (matchOne(pcar, tcar) && match(pcddr, tcdr)) ||
+      match(pcddr, text)
+  end
+
+  def matchStar(pattern, text) do
+    pcar = String.first(pattern)
+    pcddr = String.slice(pattern, 2..-1)
+    {tcar, tcdr} = case String.next_grapheme(text) do
+      nil -> {"", ""}
+      {car, cdr} -> {car, cdr}
+    end
+    (matchOne(pcar, tcar) && match(pattern, tcdr)) ||
+      match(pcddr, text)
+  end
+
+  def matchGroup(pattern, text) do
   end
 end
