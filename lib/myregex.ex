@@ -1,20 +1,7 @@
 defmodule Myregex do
   @moduledoc """
-  Documentation for Myregex.
+  A simple regex module for practice.
   """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Myregex.hello
-      :world
-
-  """
-  def hello do
-    :world
-  end
 
   def matchOne(nil, __) do
     true
