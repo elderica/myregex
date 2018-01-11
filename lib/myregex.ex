@@ -68,5 +68,31 @@ defmodule Myregex do
   end
 
   def matchGroup(pattern, text) do
+    groupEnd = indexOf(pattern, ")")
+    groupPattern = String.slice(pattern, 1..(groupEnd-1))
+    cond do
+      String.at(pattern, groupEnd+1) == "?" ->
+        remainderPattern = String.slice(pattern, (groupEnd+2)..-1)
+        (match(groupPattern, String.slice(text, 0..(String.length(groupPattern)-1))) &&
+          match(remainderPattern, String.slice(text, (String.length(groupPattern))..-1))) ||
+            match(remainderPattern, text)
+      String.at(pattern, groupEnd+1) == "*" ->
+        remainderPattern = String.slice(pattern, (groupEnd+2)..-1)
+        (match(groupPattern, String.slice(text, 0..(String.length(groupPattern)-1))) &&
+          match(pattern, String.slice(text, (String.length(groupPattern))..-1))) ||
+            match(remainderPattern, text)
+      true ->
+        remainderPattern = String.slice(pattern, (groupEnd+1)..-1)
+        match(groupPattern, String.slice(text, 0..(String.length(groupPattern)-1))) &&
+          match(remainderPattern, String.slice(text, (String.length(groupPattern))..-1))
+    end
+  end
+
+  defp indexOf(string, grapheme) do
+    parts = String.split(string, grapheme, parts: 2)
+    case parts do
+      [left, _] -> String.length(left)
+      [_] -> nil
+    end
   end
 end
